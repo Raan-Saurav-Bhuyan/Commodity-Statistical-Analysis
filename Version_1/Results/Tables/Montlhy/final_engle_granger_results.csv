@@ -1,0 +1,3 @@
+Regression,ADF Stat,p-value
+Oil ~ Gold,-2.9758,0.0372
+Gold ~ Oil,-1.5737,0.4968

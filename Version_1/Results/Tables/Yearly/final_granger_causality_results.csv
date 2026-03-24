@@ -1,0 +1,5 @@
+Direction,Lag,F-statistic,p-value
+Oil → Gold,1,0.132,0.7187
+Oil → Gold,2,0.4146,0.6643
+Gold → Oil,1,2.4864,0.1244
+Gold → Oil,2,4.3169,0.0225

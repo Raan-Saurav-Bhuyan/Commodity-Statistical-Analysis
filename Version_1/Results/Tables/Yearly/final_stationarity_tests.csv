@@ -1,0 +1,5 @@
+Series,ADF Level Stat,ADF Level p,ADF Diff Stat,ADF Diff p,PP Level Stat,PP Level p,PP Diff Stat,PP Diff p,Integration Order
+oil_log_price,-1.4131,0.576,-6.0048,0.0,-1.3075,0.6257,-5.6453,0.0,I(1)
+gold_log_price,-0.165,0.9426,-3.1352,0.0241,0.1577,0.9698,-2.9416,0.0407,I(1)
+oil_log_return,-6.1134,0.0,-5.6057,0.0,-5.96,0.0,-16.0608,0.0,I(0)
+gold_log_return,-2.9612,0.0387,-4.8717,0.0,-2.7865,0.0602,-8.5453,0.0,I(0)
