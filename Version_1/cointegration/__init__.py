@@ -1,0 +1,1 @@
+from cointegration.runner import run_cointegration_tests
