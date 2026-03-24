@@ -1,0 +1,30 @@
+import pandas as pd
+import os
+
+OLD_FILE_PATH = '/home/raan_saurav_bhuyan/Programs/ML_Projects/Oil_vs_Gold_vs_Fx/Datasets/usd_inr_monthly.csv'
+NEW_FILE_PATH = '/home/raan_saurav_bhuyan/Programs/ML_Projects/Oil_vs_Gold_vs_Fx/Datasets/processed_usd_inr_monthly.csv'
+
+if __name__ == "__main__":
+    if not os.path.exists(OLD_FILE_PATH):
+        raise FileNotFoundError(f"File not found: {OLD_FILE_PATH}")
+
+    try:
+        # Read the CSV file: --->
+        df = pd.read_csv(OLD_FILE_PATH)
+
+        # Convert the 'Date' column to datetime objects and format as YYYY-MM: --->
+        df["Date"] = pd.to_datetime(
+            df["Date"],
+            format = "%d-%m-%y",
+            errors = "raise",
+            dayfirst = True,
+        )
+        df["Date"] = df["Date"].dt.strftime("%Y-%m")
+        # df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')
+
+        # Write the modified DataFrame back to the CSV file: --->
+        df.to_csv(NEW_FILE_PATH, index = False)
+        print(f"Successfully processed file. Saved to: {NEW_FILE_PATH}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
