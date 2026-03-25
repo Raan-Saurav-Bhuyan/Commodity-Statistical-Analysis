@@ -1,22 +1,43 @@
-import numpy as np
 import pandas as pd
 
-def build_inr_prices(df: pd.DataFrame) -> pd.DataFrame:
-    df = df.copy()
 
-    df["oil_inr"] = df["oil_usd"] * df["usd_inr"]
-    df["gold_inr"] = df["gold_usd"] * df["usd_inr"]
+def merge_datasets(datasets):
+    """
+    Merge all datasets into one master dataframe.
+
+    This is CRITICAL for:
+    - VAR/VECM
+    - DCC-GARCH
+    - Causality tests
+    """
+
+    df = datasets["nominal_prices"].copy()
+
+    # Merge real prices
+    df = df.merge(datasets["real_prices"], on="Date", suffixes=("", "_real"))
+
+    # Merge returns
+    df = df.merge(datasets["nominal_returns"], on="Date", how="left")
+    df = df.merge(datasets["real_returns"], on="Date", how="left", suffixes=("", "_real"))
+
+    # Merge inflation
+    df = df.merge(datasets["inflation"], on="Date", how="left")
 
     return df
 
-def build_log_prices(df: pd.DataFrame) -> pd.DataFrame:
-    log_df = np.log(df)
-    log_df.columns = [f"log_{c}" for c in df.columns]
 
-    return log_df
+def split_views(df):
+    """
+    Create structured views for different model needs.
+    """
 
-def build_log_returns(df: pd.DataFrame) -> pd.DataFrame:
-    returns = np.log(df).diff().dropna()
-    returns.columns = [f"{c}_ret" for c in df.columns]
+    views = {
+        "prices_nominal": df.filter(regex="^log_.*(?<!real)$|Date"),
+        "prices_real": df.filter(regex="real|Date"),
+        "returns_nominal": df.filter(regex="_ret$|Date"),
+        "returns_real": df.filter(regex="_ret_real$|Date"),
+        "inflation": df[["Date", "inflation_india", "inflation_usa"]],
+        "combined": df
+    }
 
-    return returns
+    return views
