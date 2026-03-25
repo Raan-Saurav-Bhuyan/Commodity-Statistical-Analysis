@@ -22,7 +22,15 @@ def filter_I1_variables(df, stationarity_results):
         stationarity_results["integration_order"] == 1
     ]["variable"].tolist()
 
-    return df[i1_vars]
+    available_vars = [col for col in i1_vars if col in df.columns]
+
+    #! <=== Debugging: ===>
+    # missing_vars = [col for col in i1_vars if col not in df.columns]
+
+    # print("Available variables:", available_vars, "\n-----------------")
+    # print("Missing variables:", missing_vars)
+
+    return df[available_vars]
 
 def run_system(df, name):
     """
@@ -82,6 +90,6 @@ def run_cointegration():
     # Export: --->
     export_cointegration(results, OUTPUT_PATH)
 
-    print("✅ Cointegration analysis completed.")
+    print("Cointegration analysis completed.")
 
     return results

@@ -10,14 +10,14 @@ def merge_datasets(datasets):
 
     df = datasets["nominal_prices"].copy()
 
-    # Merge real prices
+    # Merge real prices: --->
     df = df.merge(datasets["real_prices"], on="Date", suffixes=("", "_real"))
 
-    # Merge returns
+    # Merge returns: --->
     df = df.merge(datasets["nominal_returns"], on="Date", how="left")
     df = df.merge(datasets["real_returns"], on="Date", how="left", suffixes=("", "_real"))
 
-    # Merge inflation
+    # Merge inflation: --->
     df = df.merge(datasets["inflation"], on="Date", how="left")
 
     return df

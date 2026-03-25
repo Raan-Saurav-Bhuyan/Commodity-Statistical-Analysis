@@ -24,9 +24,9 @@ def run_volatility():
 
     # Select variables: --->
     cols = [
-        "oil_usd_ret",
-        "gold_usd_ret",
-        "usd_inr_ret",
+        "log_oil_usd_ret",
+        "log_gold_usd_ret",
+        "log_usd_inr_ret",
         "inflation_india"
     ]
 
@@ -48,7 +48,7 @@ def run_volatility():
 
     diagnostics = summarize_volatility(garch_results)
 
-    print("✅ DCC-GARCH with inflation completed.")
+    print("DCC-GARCH with inflation completed.")
 
     return {
         "dcc": dcc,

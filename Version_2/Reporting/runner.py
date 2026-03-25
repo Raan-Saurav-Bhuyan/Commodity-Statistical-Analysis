@@ -25,22 +25,21 @@ def run_reporting():
         plot_dcc(results["dcc"], FIG_DIR)
 
     # Reports: --->
-    os.makedirs(REPORT_DIR, exist_ok=True)
+    os.makedirs(REPORT_DIR, exist_ok = True)
 
-    md_report = generate_markdown(results, tables)
-    with open(os.path.join(REPORT_DIR, "report.md"), "w") as f:
-        f.write(md_report)
+    #! <=== Debugging ===>
+    # md_report = generate_markdown(results, tables)
+    # with open(os.path.join(REPORT_DIR, "report.md"), "w") as f:
+    #     f.write(md_report)
 
-    latex_report = generate_latex(results, tables)
-    with open(os.path.join(REPORT_DIR, "report.tex"), "w") as f:
-        f.write(latex_report)
-
-    print("✅ Reporting completed.")
+    # latex_report = generate_latex(results, tables)
+    # with open(os.path.join(REPORT_DIR, "report.tex"), "w") as f:
+    #     f.write(latex_report)
 
     return {
         "tables": tables,
-        "reports": {
-            "markdown": md_report,
-            "latex": latex_report
-        }
+        # "reports": {
+        #     "markdown": md_report,
+        #     "latex": latex_report
+        # }
     }

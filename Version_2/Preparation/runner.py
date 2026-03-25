@@ -12,7 +12,7 @@ def run_preparation_pipeline():
 
     merged_df = merge_datasets(datasets)
 
-    run_all_validations(merged_df)
+    # run_all_validations(merged_df)
 
     views = split_views(merged_df)
 

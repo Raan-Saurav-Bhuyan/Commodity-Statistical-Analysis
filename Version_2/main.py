@@ -12,18 +12,43 @@ Order:
 6. Reporting
 """
 # Import libraries: --->
-import pickle as pkl
+import os
 import sys
 import traceback
+import pickle as pkl
+from datetime import datetime
 
 # Import module runners: --->
 from Preparation import run_preparation_pipeline
 from Stationarity import run_stationarity
 from Cointegration import run_cointegration
-from VAR import run_var
+from vecm_var import run_vecm_var as run_var
 from Volatility import run_volatility
 from Reporting import run_reporting
 
+# Results directory configuration: --->
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SAVE_DIR = os.path.join(BASE_DIR, "Results", "Serialized")
+
+def save_results(results, use_timestamp = True):
+    """
+    Save results dictionary to pickle file
+    """
+
+    os.makedirs(SAVE_DIR, exist_ok = True)
+
+    if use_timestamp:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"pipeline_results_{timestamp}.pkl"
+    else:
+        filename = "pipeline_results.pkl"
+
+    filepath = os.path.join(SAVE_DIR, filename)
+
+    with open(filepath, "wb") as f:
+        pkl.dump(results, f)
+
+    print(f"💾 Results saved to: {filepath}")
 
 if __name__ == "__main__":
     """
@@ -71,7 +96,8 @@ if __name__ == "__main__":
         print("PIPELINE COMPLETED SUCCESSFULLY")
         print("="*60 + "\n")
 
-        pkl.dump(results, open("results.pkl", "wb"))
+        print("Saving pipeline results...")
+        save_results(results, use_timestamp = False)
 
     except Exception as e:
         print("\n" + "="*60)
