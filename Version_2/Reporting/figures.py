@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import os
-import numpy as np
 
 def plot_dcc(dcc_data, output_dir):
     os.makedirs(output_dir, exist_ok=True)

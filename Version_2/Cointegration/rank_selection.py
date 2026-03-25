@@ -1,5 +1,3 @@
-import numpy as np
-
 def select_rank(trace_stat, trace_crit, alpha_index=1):
     """
     Select cointegration rank based on trace test.

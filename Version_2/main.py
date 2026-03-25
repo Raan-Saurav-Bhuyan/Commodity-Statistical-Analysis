@@ -1,97 +1,84 @@
 """
-Main Execution File:
-Trivariate System: Oil-Gold-USD<->INR
+Main Pipeline Runner
 
-Pipeline Stages:
-1. Data Preparation
+Executes the full Oil–Gold–USD-INR–Inflation econometric pipeline.
+
+Order:
+1. Preparation
 2. Stationarity
 3. Cointegration
-4. VECM / VAR
-5. Causality
-6. Volatility
-7. Reporting
+4. VAR/VECM
+5. Volatility (DCC-GARCH)
+6. Reporting
 """
-
-import time
+# Import libraries: --->
+import pickle as pkl
 import sys
-from pathlib import Path
+import traceback
 
-# Import custom modules: --->
-from Preparation import run_all as run_preparation
+# Import module runners: --->
+from Preparation import run_preparation_pipeline
 from Stationarity import run_stationarity
 from Cointegration import run_cointegration
-from vecm_var import run_vecm_var
-from Causality import run_causality
+from VAR import run_var
 from Volatility import run_volatility
 from Reporting import run_reporting
 
-# Configuration: --->
-FREQUENCIES = ["monthly", "yearly"]
-BASE_DIR = Path(__file__).resolve().parent
 
-# Helper Functions: --->
-def print_stage(stage_name: str):
-    print("\n" + "=" * 60)
-    print(f"Running Stage: {stage_name}")
-    print("=" * 60)
-
-def run_pipeline_for_frequency(freq: str):
-    print(f"\n\n********** {freq.upper()} DATA PIPELINE **********")
-
-    # Stage 2 — Stationarity: --->
-    print_stage("Stationarity Analysis")
-    run_stationarity(freq)
-
-    # Stage 3 — Cointegration: --->
-    print_stage("Cointegration Analysis")
-    run_cointegration(freq)
-
-    # Stage 4 — VECM / VAR: --->
-    print_stage("VECM / VAR Estimation")
-    run_vecm_var(freq)
-
-    # Stage 5 — Causality: --->
-    print_stage("Granger Causality")
-    run_causality(freq)
-
-    # Stage 6 — Volatility Spillovers: --->
-    print_stage("Volatility Spillovers (GARCH-DCC)")
-    run_volatility(freq)
-
-    # Stage 7 — Reporting: --->
-    print_stage("Reporting & Compilation")
-    run_reporting(freq)
-
-# Main Execution: --->
 if __name__ == "__main__":
-    start_time = time.time()
+    """
+    Execute full econometric pipeline
+    """
 
-    print("\n" + "#" * 60)
+    print("\n" + "="*60)
     print("STARTING FULL ECONOMETRIC PIPELINE")
-    print("#" * 60)
+    print("="*60 + "\n")
 
-    # try:
-    # Stage 1 — Data Preparation: --->-
-    print_stage("Data Preparation")
-    run_preparation()
+    results = {}
 
-    # Remaining Stages Per Frequency: --->
-    for freq in FREQUENCIES:
-        run_pipeline_for_frequency(freq)
+    try:
+        # Stage 1: Preparation: --->
+        print("[1/6] Running Preparation Module...")
+        results["preparation"] = run_preparation_pipeline()
+        print("Preparation Completed\n")
 
-    print("\n" + "#" * 60)
-    print("PIPELINE EXECUTED SUCCESSFULLY")
-    print("#" * 60)
+        # Stage 2: Stationarity: --->
+        print("[2/6] Running Stationarity Tests...")
+        results["stationarity"] = run_stationarity()
+        print("Stationarity Completed\n")
 
-    # except Exception as e:
-    #     print("\n" + "!" * 60)
-    #     print("PIPELINE FAILED")
-    #     print("Error:", e)
-    #     print("!" * 60)
+        # Stage 3: Cointegration: --->
+        print("[3/6] Running Cointegration Analysis...")
+        results["cointegration"] = run_cointegration()
+        print("Cointegration Completed\n")
 
-    #     sys.exit(1)
+        # Stage 4: VECM / VAR: --->
+        print("[4/6] Running VAR/VECM Models...")
+        results["var"] = run_var()
+        print("VAR/VECM Completed\n")
 
-    end_time = time.time()
-    total_time = round((end_time - start_time) / 60, 2)
+        # Stage 5: Volatility: --->
+        print("[5/6] Running Volatility (DCC-GARCH)...")
+        results["volatility"] = run_volatility()
+        print("Volatility Completed\n")
 
-    print(f"\nTotal Execution Time: {total_time} minutes\n")
+        # Stage 6: Reporting: --->
+        print("[6/6] Generating Reports...")
+        results["reporting"] = run_reporting()
+        print("Reporting Completed\n")
+
+        print("="*60)
+        print("PIPELINE COMPLETED SUCCESSFULLY")
+        print("="*60 + "\n")
+
+        pkl.dump(results, open("results.pkl", "wb"))
+
+    except Exception as e:
+        print("\n" + "="*60)
+        print("PIPELINE FAILED")
+        print("="*60)
+
+        print(f"\nError: {str(e)}\n")
+        traceback.print_exc()
+
+        sys.exit(1)

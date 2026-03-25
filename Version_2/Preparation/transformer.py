@@ -1,6 +1,3 @@
-import pandas as pd
-
-
 def merge_datasets(datasets):
     """
     Merge all datasets into one master dataframe.

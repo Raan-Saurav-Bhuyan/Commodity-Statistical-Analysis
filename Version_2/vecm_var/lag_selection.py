@@ -1,4 +1,3 @@
-import pandas as pd
 from statsmodels.tsa.api import VAR
 
 def select_lag(df, maxlags=5):

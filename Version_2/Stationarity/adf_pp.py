@@ -1,7 +1,7 @@
+# Import libraries: --->
 import pandas as pd
 from statsmodels.tsa.stattools import adfuller
 from arch.unitroot import PhillipsPerron
-
 
 def adf_test(series, name):
     result = adfuller(series.dropna(), autolag="AIC")
