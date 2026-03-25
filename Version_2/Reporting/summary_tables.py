@@ -1,19 +1,19 @@
 import pandas as pd
 
-def summarize_cointegration(johansen_df: pd.DataFrame):
-    if johansen_df is None:
-        return None
+def build_summary_tables(results):
+    tables = {}
 
-    significant = johansen_df[johansen_df["Trace Statistic"] > johansen_df["Trace 5% Critical"]]
+    # Stationarity summary: --->
+    if "stationarity" in results:
+        tables["integration_counts"] = (
+            results["stationarity"]
+            .groupby("integration_order")
+            .size()
+            .reset_index(name="count")
+        )
 
-    rank = len(significant)
+    # Cointegration summary: --->
+    if "cointegration" in results:
+        tables["cointegration"] = results["cointegration"]
 
-    return pd.DataFrame({"Selected Cointegration Rank": [rank]})
-
-def summarize_granger(granger_df: pd.DataFrame):
-    if granger_df is None:
-        return None
-
-    significant = granger_df[granger_df["p-value"] < 0.05]
-
-    return significant
+    return tables
