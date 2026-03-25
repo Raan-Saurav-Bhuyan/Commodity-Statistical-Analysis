@@ -1,73 +1,31 @@
 import numpy as np
-import pandas as pd
-from scipy.optimize import minimize
 
-class DCC:
-    def __init__(self, std_resids: pd.DataFrame):
-        self.eps = std_resids.values
-        self.T, self.N = self.eps.shape
-        self.Qbar = np.cov(self.eps.T)
+def compute_standardized_residuals(garch_results):
+    """
+    Extract standardized residuals from GARCH models
+    """
 
-    def _dcc_likelihood(self, params):
-        a, b = params
+    residuals = []
 
-        Q = self.Qbar.copy()
-        loglik = 0
+    for res in garch_results:
+        std_resid = res.resid / res.conditional_volatility
+        residuals.append(std_resid)
 
-        for t in range(self.T):
-            eps_t = self.eps[t][:, None]
+    return np.column_stack(residuals)
 
-            Q = (
-                (1 - a - b) * self.Qbar
-                + a * (eps_t @ eps_t.T)
-                + b * Q
-            )
+def compute_dcc(residuals):
+    """
+    Simplified DCC approximation using rolling correlations
+    """
 
-            D_inv = np.diag(1 / np.sqrt(np.diag(Q)))
-            R = D_inv @ Q @ D_inv
+    window = 5  # yearly data → small window
 
-            loglik += (
-                np.log(np.linalg.det(R))
-                + self.eps[t] @ np.linalg.inv(R) @ self.eps[t]
-            )
+    T, N = residuals.shape
+    dcc_matrices = []
 
-        return 0.5 * loglik
+    for t in range(window, T):
+        sub = residuals[t-window:t]
+        corr = np.corrcoef(sub.T)
+        dcc_matrices.append(corr)
 
-    def fit(self):
-        bounds = [(1e-6, 0.999), (1e-6, 0.999)]
-
-        constraint = {
-            "type": "ineq",
-            "fun": lambda x: 1 - x[0] - x[1],
-        }
-
-        result = minimize(
-            self._dcc_likelihood,
-            x0 = [0.05, 0.9],
-            bounds = bounds,
-            constraints = constraint,
-        )
-
-        self.a, self.b = result.x
-
-        return result
-
-    def compute_correlations(self):
-        Q = self.Qbar.copy()
-        correlations = []
-
-        for t in range(self.T):
-            eps_t = self.eps[t][:, None]
-
-            Q = (
-                (1 - self.a - self.b) * self.Qbar
-                + self.a * (eps_t @ eps_t.T)
-                + self.b * Q
-            )
-
-            D_inv = np.diag(1 / np.sqrt(np.diag(Q)))
-            R = D_inv @ Q @ D_inv
-
-            correlations.append(R)
-
-        return correlations
+    return dcc_matrices

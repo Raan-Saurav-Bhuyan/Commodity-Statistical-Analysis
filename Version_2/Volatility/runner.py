@@ -1,53 +1,53 @@
-from pathlib import Path
-import pandas as pd
+import os
 
-# Import custom modules: --->
-from Volatility.garch import estimate_garch
-from Volatility.dcc import DCC
-from Volatility.diagnostics import volatility_persistence
-from Volatility.exporter import (
-    export_volatility,
-    export_correlations,
-)
+from Preparation import run_preparation_pipeline
 
-PROCESSED_DIR = Path("Datasets/Processed")
-RESULTS_DIR = Path("Results")
+from .garch import fit_garch
+from .dcc import compute_standardized_residuals, compute_dcc
+from .diagnostics import summarize_volatility
+from .exporter import export_dcc
 
-def run_volatility(frequency: str):
-    returns_path = PROCESSED_DIR / f"{frequency}_returns.csv"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUTPUT_PATH = os.path.join(BASE_DIR, "Results", "Tables", "dcc_results.npy")
 
-    df = pd.read_csv(returns_path, index_col = 0, parse_dates = True)
+def run_volatility():
+    """
+    Main DCC-GARCH pipeline with inflation
+    """
 
-    garch_results = {}
-    std_resids = {}
+    views = run_preparation_pipeline()
 
-    # Univariate GARCH: --->
-    for col in df.columns:
-        res = estimate_garch(df[col])
+    df = views["combined"]
 
-        garch_results[col] = res["conditional_vol"]
-        std_resids[col] = res["std_resid"]
+    # Select variables: --->
+    cols = [
+        "oil_usd_ret",
+        "gold_usd_ret",
+        "usd_inr_ret",
+        "inflation_india"
+    ]
 
-        persistence = volatility_persistence(res["model"])
+    data = df[cols].dropna()
 
-        with open(RESULTS_DIR / "Tables" / f"{frequency}_{col}_garch_persistence.txt", "w") as f:
-            f.write(f"Volatility Persistence (α+β): {persistence}")
+    # Fit GARCH: --->
+    garch_results = []
 
-    export_volatility(
-        garch_results,
-        RESULTS_DIR / "Tables" / f"{frequency}_conditional_volatility.csv",
-    )
+    for col in cols:
+        res = fit_garch(data[col])
+        garch_results.append(res)
 
-    # DCC Estimation: --->
-    std_resids_df = pd.DataFrame(std_resids)
+    # Compute DCC: --->
+    residuals = compute_standardized_residuals(garch_results)
+    dcc = compute_dcc(residuals)
 
-    dcc = DCC(std_resids_df)
-    dcc.fit()
+    # Export DCC: --->
+    export_dcc(dcc, OUTPUT_PATH)
 
-    correlations = dcc.compute_correlations()
+    diagnostics = summarize_volatility(garch_results)
 
-    export_correlations(
-        correlations,
-        df.columns,
-        RESULTS_DIR / "Tables" / f"{frequency}_dcc_correlations.csv",
-    )
+    print("✅ DCC-GARCH with inflation completed.")
+
+    return {
+        "dcc": dcc,
+        "diagnostics": diagnostics
+    }

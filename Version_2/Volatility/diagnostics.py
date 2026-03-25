@@ -1,6 +1,11 @@
-def volatility_persistence(garch_result):
-    params = garch_result.params
-    alpha = params["alpha[1]"]
-    beta = params["beta[1]"]
+def summarize_volatility(garch_results):
+    summary = []
 
-    return alpha + beta
+    for i, res in enumerate(garch_results):
+        summary.append({
+            "series_index": i,
+            "aic": res.aic,
+            "bic": res.bic
+        })
+
+    return summary
