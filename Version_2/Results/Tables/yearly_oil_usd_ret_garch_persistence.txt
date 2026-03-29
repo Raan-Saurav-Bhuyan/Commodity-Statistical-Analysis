@@ -1,0 +1,1 @@
+Volatility Persistence (α+β): 0.9999999999999981

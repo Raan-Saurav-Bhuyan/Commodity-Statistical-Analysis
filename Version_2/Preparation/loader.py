@@ -1,28 +1,39 @@
-import os
 import pandas as pd
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "Datasets", "Processed")
+# Import custom modules: --->
+# from Preparation.validators import (
+#     validate_time_index,
+#     validate_prices,
+#     validate_fx,
+# )
 
+def load_price_series(filepath: Path, frequency: str, date_col: str = "Date", price_col: str = "Price") -> pd.Series:
+    df = pd.read_csv(filepath)
+    df[date_col] = pd.to_datetime(df[date_col])
+    df = df.sort_values(date_col).set_index(date_col)
 
-def load_csv(filename):
-    path = os.path.join(DATA_DIR, filename)
-    df = pd.read_csv(path)
-    df["Date"] = pd.to_datetime(df["Date"])
+    # Validate Date column: --->
+    # validate_time_index(df.index, frequency)
+
+    series = df[price_col].astype(float)
+
+    # Validate Price column: --->
+    # validate_prices(series, filepath.stem)
+
+    return series
+
+def load_frequency(raw_dir: Path, frequency: str) -> pd.DataFrame:
+    oil = load_price_series(raw_dir / f"processed_oil_usd_{frequency}.csv", frequency = frequency)
+    gold = load_price_series(raw_dir / f"processed_gold_usd_{frequency}.csv", frequency = frequency)
+    fx = load_price_series(raw_dir / f"processed_usd_inr_{frequency}.csv", frequency = frequency)
+
+    # validate_fx(fx)
+
+    df = pd.concat(
+        [oil, gold, fx],
+        axis = 1,
+        keys = ["oil_usd", "gold_usd", "usd_inr"],
+    ).dropna()
+
     return df
-
-
-def load_all_datasets():
-    """
-    Loads all datasets required for inflation-integrated pipeline.
-    """
-
-    datasets = {
-        "nominal_prices": load_csv("yearly_prices.csv"),
-        "real_prices": load_csv("yearly_real_prices.csv"),
-        "nominal_returns": load_csv("yearly_returns.csv"),
-        "real_returns": load_csv("yearly_real_returns.csv"),
-        "inflation": load_csv("yearly_inflation.csv"),
-    }
-
-    return datasets

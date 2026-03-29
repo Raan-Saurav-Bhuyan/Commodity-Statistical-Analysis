@@ -1,21 +1,15 @@
-import matplotlib.pyplot as plt
-import os
+from pathlib import Path
+import shutil
 
-def plot_dcc(dcc_data, output_dir):
-    os.makedirs(output_dir, exist_ok=True)
+RESULTS_DIR = Path("Results")
+REPORT_DIR = Path("Results/Report")
 
-    if dcc_data is None or len(dcc_data) == 0:
-        return
+def copy_figures(frequency: str):
 
-    # Plot first correlation pair over time: --->
-    series = [mat[0, 1] for mat in dcc_data]
+    REPORT_DIR.mkdir(parents = True, exist_ok = True)
 
-    plt.figure()
-    plt.plot(series)
-    plt.title("Dynamic Correlation (Oil vs Gold with Inflation Context)")
+    for fig in ["irf.png", "fevd.png"]:
+        source = RESULTS_DIR / "Figures" / f"{frequency}_{fig}"
 
-    plt.xlabel("Time")
-    plt.ylabel("Correlation")
-
-    plt.savefig(os.path.join(output_dir, "dcc_oil_gold.png"))
-    plt.close()
+        if source.exists():
+            shutil.copy(source, REPORT_DIR / source.name)

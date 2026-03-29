@@ -1,4 +1,3 @@
-# Import libraries: --->
 from statsmodels.tsa.vector_ar.var_model import VAR
 
 def run_block_exogeneity(model_result):

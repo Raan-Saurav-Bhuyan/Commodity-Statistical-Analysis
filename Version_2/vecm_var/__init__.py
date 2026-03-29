@@ -1,22 +1,10 @@
 """
-VAR/VECM Module
+Stage 4 — VECM / VAR Estimation
 
-Performs:
-- Lag selection
-- VAR or VECM model estimation
-- Impulse Response Functions (IRF)
-- Forecast Error Variance Decomposition (FEVD)
-- Model diagnostics
+If cointegration rank ≥ 1 → estimate VECM.
+If rank = 0 → estimate VAR in first differences.
 """
 
-from .lag_selection import select_lag
-from .var_model import fit_var
-from .vecm_model import fit_vecm
-from .runner import run_vecm_var
+from vecm_var.runner import run_vecm_var
 
-__all__ = [
-    "select_lag",
-    "fit_var",
-    "fit_vecm",
-    "run_vecm_var",
-]
+__all__ = ["run_vecm_var"]

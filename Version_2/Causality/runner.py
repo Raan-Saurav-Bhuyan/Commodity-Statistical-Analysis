@@ -1,12 +1,12 @@
-# Import libraries: --->
+from pathlib import Path
 import pandas as pd
 from statsmodels.tsa.vector_ar.var_model import VAR
 from statsmodels.tsa.vector_ar.vecm import VECM
 
 # Import custom modules: --->
-from .pairwise import run_pairwise_granger
-from .block_exogeneity import run_block_exogeneity
-from .exporter import export_results
+from Causality.pairwise import run_pairwise_granger
+from Causality.block_exogeneity import run_block_exogeneity
+from Causality.exporter import export_results
 
 PROCESSED_DIR = Path("Datasets/Processed")
 RESULTS_DIR = Path("Results")

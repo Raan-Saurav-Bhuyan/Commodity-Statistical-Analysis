@@ -1,12 +1,25 @@
-def compute_irf(model, steps = 10):
-    """
-    Compute Impulse Response Functions
-    """
-    return model.irf(steps)
+import pandas as pd
 
+def compute_irf(model_result, periods: int = 12):
+    """
+    Computes impulse response functions for VAR or VECM.
+    """
 
-def compute_fevd(model, steps = 10):
+    try:
+        return model_result.irf(periods)
+    except Exception:
+        return None
+
+def compute_fevd(model_result, periods: int = 12):
     """
-    Compute Forecast Error Variance Decomposition
+    Computes FEVD only if available (VAR).
+    For VECM, returns None since not directly implemented.
     """
-    return model.fevd(steps)
+
+    if hasattr(model_result, "fevd"):
+        try:
+            return model_result.fevd(periods)
+        except Exception:
+            return None
+    else:
+        return None

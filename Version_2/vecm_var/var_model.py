@@ -1,12 +1,7 @@
-# Import libraries: --->
-from statsmodels.tsa.api import VAR
+import pandas as pd
+from statsmodels.tsa.vector_ar.var_model import VAR
 
-def fit_var(df, lags):
-    """
-    Fit VAR model
-    """
+def estimate_var(data: pd.DataFrame, lags: int):
+    model = VAR(data)
 
-    model = VAR(df)
-    results = model.fit(lags)
-
-    return results
+    return model.fit(lags)

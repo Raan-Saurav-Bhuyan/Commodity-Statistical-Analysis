@@ -1,7 +1,7 @@
-import os
+from pathlib import Path
 
-def export_model_summary(summary, path):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+def export_summary(summary_obj, path: Path):
+    path.parent.mkdir(parents = True, exist_ok = True)
 
     with open(path, "w") as f:
-        f.write(str(summary))
+        f.write(summary_obj.as_text())

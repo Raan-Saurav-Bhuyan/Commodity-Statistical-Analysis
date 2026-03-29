@@ -1,4 +1,3 @@
-# Import libraries: --->
 import pandas as pd
 from statsmodels.tsa.stattools import grangercausalitytests
 

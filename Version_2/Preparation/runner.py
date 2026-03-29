@@ -1,19 +1,40 @@
+from pathlib import Path
+
 # Import custom modules: --->
-from .loader import load_all_datasets
-from .transformer import merge_datasets, split_views
-from .validators import run_all_validations
+from Preparation.loader import load_frequency
+from Preparation.exporter import export_csv
+from Preparation.transformer import (
+    build_inr_prices,
+    build_log_prices,
+    build_log_returns,
+)
 
-def run_preparation_pipeline():
-    """
-    Main entry point for all downstream modules.
-    """
+RAW_DIR = Path("Datasets/Raw")
+PROCESSED_DIR = Path("Datasets/Processed")
 
-    datasets = load_all_datasets()
+def run_preparation(frequency: str) -> None:
+    # df_prices contains the core non-collinear variables (oil_usd, gold_usd, usd_inr).
+    # The original dataframe from load_frequency is used directly.
+    df_prices = load_frequency(RAW_DIR, frequency)
 
-    merged_df = merge_datasets(datasets)
+    # build_inr_prices() was removed from the main modeling pipeline.
+    # Including derived prices (e.g., oil_inr) with base prices (oil_usd, usd_inr)
+    # in the VECM creates perfect multicollinearity, leading to invalid model estimates.
+    log_prices = build_log_prices(df_prices)
+    log_returns = build_log_returns(log_prices)
 
-    # run_all_validations(merged_df)
+    # Export the time-series prices: --->
+    export_csv(
+        log_prices,
+        PROCESSED_DIR / f"{frequency}_prices.csv",
+    )
 
-    views = split_views(merged_df)
+    # Export the time-series returns: --->
+    export_csv(
+        log_returns,
+        PROCESSED_DIR / f"{frequency}_returns.csv",
+    )
 
-    return views
+def run_all() -> None:
+    run_preparation("monthly")
+    run_preparation("yearly")

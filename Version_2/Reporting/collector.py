@@ -1,29 +1,33 @@
-import os
+from pathlib import Path
 import pandas as pd
-import numpy as np
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RESULTS_DIR = Path("Results")
 
-def collect_all_results():
-    """
-    Collect outputs from all modules
-    """
+def load_table(filename: str):
+    path = RESULTS_DIR / "Tables" / filename
 
-    results = {}
+    if path.exists():
+        return pd.read_csv(path)
 
-    # Stationarity: --->
-    stationarity_path = os.path.join(BASE_DIR, "Results", "Tables", "stationarity_results.csv")
-    if os.path.exists(stationarity_path):
-        results["stationarity"] = pd.read_csv(stationarity_path)
+    return None
 
-    # Cointegration: --->
-    coint_path = os.path.join(BASE_DIR, "Results", "Tables", "cointegration_results.csv")
-    if os.path.exists(coint_path):
-        results["cointegration"] = pd.read_csv(coint_path)
+def load_text(filename: str):
+    path = RESULTS_DIR / "Tables" / filename
 
-    # DCC: --->
-    dcc_path = os.path.join(BASE_DIR, "Results", "Tables", "dcc_results.npy")
-    if os.path.exists(dcc_path):
-        results["dcc"] = np.load(dcc_path, allow_pickle=True)
+    if path.exists():
+        return path.read_text()
 
-    return results
+    return None
+
+def collect_all(frequency: str):
+    data = {
+        "unit_root": load_table(f"{frequency}_unit_root_tests.csv"),
+        "engle_granger": load_table(f"{frequency}_engle_granger.csv"),
+        "johansen": load_table(f"{frequency}_johansen.csv"),
+        "pairwise_granger": load_table(f"{frequency}_pairwise_granger.csv"),
+        "block_exogeneity": load_table(f"{frequency}_block_exogeneity.csv"),
+        "dcc": load_table(f"{frequency}_dcc_correlations.csv"),
+        "model_selected": load_text(f"{frequency}_model_selected.txt"),
+    }
+
+    return data

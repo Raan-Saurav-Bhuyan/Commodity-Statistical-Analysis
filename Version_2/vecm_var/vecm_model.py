@@ -1,12 +1,12 @@
-# Import libraries: --->
+import pandas as pd
 from statsmodels.tsa.vector_ar.vecm import VECM
 
-def fit_vecm(df, rank, lags):
-    """
-    Fit VECM model
-    """
+def estimate_vecm(data: pd.DataFrame, rank: int, k_ar_diff: int):
+    model = VECM(
+        data,
+        k_ar_diff = k_ar_diff,
+        coint_rank = rank,
+        deterministic = "co",
+    )
 
-    model = VECM(df, k_ar_diff = lags, coint_rank = rank)
-    results = model.fit()
-
-    return results
+    return model.fit()

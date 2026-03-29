@@ -1,6 +1,6 @@
-import os
+from pathlib import Path
+import pandas as pd
 
-def export_stationarity(results_df, output_path):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    results_df.to_csv(output_path, index=False)
+def export_results(df: pd.DataFrame, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_csv(path, index=False)

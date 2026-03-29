@@ -1,17 +1,13 @@
-def select_rank(trace_stat, trace_crit, alpha_index=1):
-    """
-    Select cointegration rank based on trace test.
+import pandas as pd
 
-    alpha_index:
-    0 → 90%
-    1 → 95%
-    2 → 99%
+def select_rank(johansen_df: pd.DataFrame) -> int:
+    """
+    Rank determined using Trace test at 5% level.
     """
 
-    rank = 0
+    significant = johansen_df[johansen_df["Trace Statistic"] > johansen_df["Trace 5% Critical"]]
 
-    for i in range(len(trace_stat)):
-        if trace_stat[i] > trace_crit[i][alpha_index]:
-            rank += 1
+    if significant.empty:
+        return 0
 
-    return rank
+    return int(significant["Cointegration Rank"].max() + 1)

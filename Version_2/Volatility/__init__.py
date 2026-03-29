@@ -1,19 +1,12 @@
 """
-Volatility Module
+Stage 6 — Volatility Spillovers
 
-Performs:
-- Univariate GARCH modeling
+Implements:
+- Univariate GARCH(1,1)
 - Dynamic Conditional Correlation (DCC)
-- Volatility diagnostics
-- Inflation-integrated volatility analysis
+- Spillover diagnostics
 """
 
-from .garch import fit_garch
-from .dcc import compute_dcc
-from .runner import run_volatility
+from Volatility.runner import run_volatility
 
-__all__ = [
-    "fit_garch",
-    "compute_dcc",
-    "run_volatility",
-]
+__all__ = ["run_volatility"]
