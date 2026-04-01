@@ -3,10 +3,13 @@ import os
 
 # Import custom modules: --->
 from .collector import collect_all_results
-from .summary_tables import build_summary_tables
-from .figures import plot_dcc
-from .markdown_report import generate_markdown
-from .latex_report import generate_latex
+from .figures import (
+    plot_dcc,
+    plot_yearly_dcc,
+    plot_yearly_volatility,
+    plot_granger_causality
+)
+from .vecm_visuals import plot_vecm_parameters
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIG_DIR = os.path.join(BASE_DIR, "Results", "Figures")
@@ -18,28 +21,36 @@ def run_reporting():
     """
 
     results = collect_all_results()
-    tables = build_summary_tables(results)
 
-    # Figures: --->
-    if "dcc" in results:
-        plot_dcc(results["dcc"], FIG_DIR)
-
-    # Reports: --->
+    os.makedirs(FIG_DIR, exist_ok=True)
     os.makedirs(REPORT_DIR, exist_ok = True)
 
-    #! <=== Debugging ===>
-    # md_report = generate_markdown(results, tables)
-    # with open(os.path.join(REPORT_DIR, "report.md"), "w") as f:
-    #     f.write(md_report)
+    #! Debugging: Only to be used with the yearly DCC data saved in NumPy array: --->
+    # Extract variable names for labeling if available: --->
+    # var_names = None
+    # if "volatility_yearly" in results and not results["volatility_yearly"].empty:
+    #     var_names = results["volatility_yearly"]["variable"].unique().tolist()
 
-    # latex_report = generate_latex(results, tables)
-    # with open(os.path.join(REPORT_DIR, "report.tex"), "w") as f:
-    #     f.write(latex_report)
+    #! Debugging: Only to be used with the yearly DCC data saved in NumPy array: --->
+    # if "dcc" in results:
+    #     print("[Reporting] Plotting Full-Sample DCC Pairs...")
+    #     plot_dcc(results["dcc"], FIG_DIR, var_names=var_names)
 
-    return {
-        "tables": tables,
-        # "reports": {
-        #     "markdown": md_report,
-        #     "latex": latex_report
-        # }
-    }
+    # Yearly DCC Figures: --->
+    if "dcc_yearly" in results:
+        print("[Reporting] Plotting Yearly DCC...")
+        plot_yearly_dcc(results["dcc_yearly"], FIG_DIR)
+
+    # Yearly Volatility Figures: --->
+    if "volatility_yearly" in results:
+        print("[Reporting] Plotting Yearly Volatility...")
+        plot_yearly_volatility(results["volatility_yearly"], FIG_DIR)
+
+    # Granger Causality Heatmap: --->
+    if "granger_yearly" in results:
+        print("[Reporting] Plotting Granger Causality Heatmap...")
+        plot_granger_causality(results["granger_yearly"], FIG_DIR)
+
+    # VECM Summary Visuals: --->
+    print("[Reporting] Plotting VECM Summaries...")
+    plot_vecm_parameters(REPORT_DIR, FIG_DIR)

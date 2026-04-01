@@ -32,7 +32,7 @@ def split_views(df):
         "prices_nominal": df.filter(regex="^log_.*(?<!real)$|Date"),
         "prices_real": df.filter(regex="real|Date"),
         "returns_nominal": df.filter(regex="_ret$|Date"),
-        "returns_real": df.filter(regex="_ret_real$|Date"),
+        "returns_real": df.filter(regex="_real_ret$|Date"),
         "inflation": df[["Date", "inflation_india", "inflation_usa"]],
         "combined": df
     }

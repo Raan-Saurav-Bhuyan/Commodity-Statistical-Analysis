@@ -48,20 +48,24 @@ def run_system(df, name):
         "trace_stat": result["trace_stat"].tolist()
     }
 
-def run_cointegration():
+def run_cointegration(views = None, stationarity = None):
     """
     Main pipeline
     """
 
-    views = run_preparation_pipeline()
-    stationarity = run_stationarity()
+    # Load data: --->
+    if views is None:
+        views = run_preparation_pipeline()
+
+    if stationarity is None:
+        stationarity = run_stationarity(views)
 
     df = views["combined"]
 
     results = []
 
     # Nominal system: --->
-    nominal_cols = ["log_oil_usd", "log_gold_usd", "log_usd_inr"]
+    nominal_cols = ["log_oil_usd", "log_gold_usd", "log_usd_inr", "log_oil_inr", "log_gold_inr"]
     nominal_df = df[nominal_cols].dropna()
 
     nominal_df = filter_I1_variables(nominal_df, stationarity)
@@ -70,7 +74,7 @@ def run_cointegration():
         results.append(run_system(nominal_df, "nominal"))
 
     # Real system: --->
-    real_cols = ["log_oil_usd_real", "log_gold_usd_real", "log_usd_inr_real"]
+    real_cols = ["log_oil_usd_real", "log_gold_usd_real", "log_usd_inr_real", "log_cpi_india", "log_cpi_usa", "log_oil_inr_real"]
     real_df = df[real_cols].dropna()
 
     real_df = filter_I1_variables(real_df, stationarity)
@@ -79,7 +83,7 @@ def run_cointegration():
         results.append(run_system(real_df, "real"))
 
     # Inflation system: --->
-    infl_cols = ["log_oil_usd", "log_gold_usd", "log_usd_inr", "inflation_india"]
+    infl_cols = ["log_oil_usd", "log_gold_usd", "log_usd_inr", "log_oil_inr", "log_gold_inr", "inflation_india", "inflation_usa"]
     infl_df = df[infl_cols].dropna()
 
     infl_df = filter_I1_variables(infl_df, stationarity)

@@ -20,14 +20,14 @@ def determine_integration_order(series, name):
 
     df = pd.DataFrame({"x": series}).dropna()
 
-    # Level
+    # Level: --->
     level_tests = run_stationarity_tests(df)
     level_p = level_tests["p_value"].values
 
     if is_stationary(level_p):
         return name, 0
 
-    # First Difference
+    # First Difference: --->
     diff1 = df["x"].diff().dropna()
     diff1_tests = run_stationarity_tests(pd.DataFrame({"x": diff1}))
     diff1_p = diff1_tests["p_value"].values
@@ -35,7 +35,7 @@ def determine_integration_order(series, name):
     if is_stationary(diff1_p):
         return name, 1
 
-    # Second Difference
+    # Second Difference: --->
     diff2 = diff1.diff().dropna()
     diff2_tests = run_stationarity_tests(pd.DataFrame({"x": diff2}))
     diff2_p = diff2_tests["p_value"].values

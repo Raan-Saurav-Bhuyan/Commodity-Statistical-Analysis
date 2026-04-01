@@ -3,6 +3,7 @@ import os
 
 # Import module runners: --->
 from Preparation import run_preparation_pipeline
+from Stationarity import run_stationarity
 from Cointegration import run_cointegration
 
 # Import custom modules: --->
@@ -24,14 +25,19 @@ def run_model_system(df, rank, name):
     lags = select_lag(df)
 
     if rank >= 1:
+        print("Running VECM model...")
+
         model = fit_vecm(df, rank, lags)
         model_type = "VECM"
     else:
+        print("Running VAR model...")
+
         model = fit_var(df, lags)
         model_type = "VAR"
 
-    irf = compute_irf(model)
-    fevd = compute_fevd(model)
+        irf = compute_irf(model)
+        fevd = compute_fevd(model)
+
     diagnostics = run_diagnostics(model)
 
     # Export summary: --->
@@ -40,23 +46,40 @@ def run_model_system(df, rank, name):
         os.path.join(OUTPUT_DIR, f"{name}_{model_type}_summary.txt")
     )
 
-    return {
-        "system": name,
-        "model_type": model_type,
-        "lags": lags,
-        "rank": rank,
-        "irf": irf,
-        "fevd": fevd,
-        "diagnostics": diagnostics
-    }
+    if rank >= 1:
+        return {
+            "system": name,
+            "model_type": model_type,
+            "lags": lags,
+            "rank": rank,
+            # "irf": irf,
+            # "fevd": fevd,
+            "diagnostics": diagnostics
+        }
+    else:
+                return {
+            "system": name,
+            "model_type": model_type,
+            "lags": lags,
+            "rank": rank,
+            "irf": irf,
+            "fevd": fevd,
+            "diagnostics": diagnostics
+        }
 
-def run_vecm_var():
+def run_vecm_var(views = None, coint_results = None):
     """
     Main pipeline
     """
 
-    views = run_preparation_pipeline()
-    coint_results = run_cointegration()
+    # Load data: --->
+    if views is None:
+        views = run_preparation_pipeline()
+
+    # Cointegration: --->
+    if coint_results is None:
+        stationarity = run_stationarity(views)
+        coint_results = run_cointegration(views, stationarity)
 
     df = views["combined"]
 

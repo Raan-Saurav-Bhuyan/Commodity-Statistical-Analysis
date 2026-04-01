@@ -1,44 +1,53 @@
 # Import libraries: --->
 from statsmodels.tsa.vector_ar.var_model import VAR
 
-def run_block_exogeneity(model_result):
+def run_block_exogeneity(data):
     """
     Block exogeneity (Granger causality) tests.
 
-    If VECM → re-estimate equivalent VAR in levels.
+    Uses VAR model estimated from input data.
     """
 
-    # Determine if VAR or VECM: --->
-    if model_result.__class__.__name__ == "VECMResults":
-        # Extract endogenous data used in VECM: --->
-        endog = model_result.model.endog
+    # Fit VAR model with lag selection: --->
+    try:
+        model = VAR(data)
 
-        # Determine lag order used in VECM: --->
-        k_ar = model_result.k_ar
+        # Select optimal lag using AIC: --->
+        lag_selection = model.select_order(maxlags = 1)
+        selected_lag = lag_selection.aic
 
-        # Refit VAR in levels: --->
-        var_model = VAR(endog).fit(k_ar)
-    else:
-        # Already VARResults: --->
-        var_model = model_result
+        # Fallback if selection fails: --->
+        if selected_lag is None:
+            selected_lag = 1
+
+        var_model = model.fit(selected_lag)
+
+    except Exception as e:
+        raise RuntimeError(f"VAR fitting failed: {e}")
 
     variables = var_model.names
     results = []
 
-    for caused in variables:
-        causing = [v for v in variables if v != caused]
+    # Block exogeneity tests: --->
+    for dependent in variables:
+        excluded = [v for v in variables if v != dependent]
 
-        test = var_model.test_causality(
-            caused,
-            causing,
-            kind = "f"
-        )
+        try:
+            test = var_model.test_causality(
+                dependent,
+                excluded,
+                kind="f"
+            )
 
-        results.append({
-            "Caused": caused,
-            "Causing": ", ".join(causing),
-            "F-stat": test.test_statistic,
-            "p-value": test.pvalue
-        })
+            results.append({
+                "dependent": dependent,
+                "excluded": ", ".join(excluded),
+                "chi2_stat": test.test_statistic,
+                "df": test.df,
+                "p_value": test.pvalue
+            })
+
+        except Exception as e:
+            print(f"Block exogeneity failed for {dependent}: {e}")
 
     return results

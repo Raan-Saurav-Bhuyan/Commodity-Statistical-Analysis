@@ -1,65 +1,146 @@
 # Import libraries: --->
+import os
 import pandas as pd
-from statsmodels.tsa.vector_ar.var_model import VAR
-from statsmodels.tsa.vector_ar.vecm import VECM
+
+# Import module runners: --->
+from Preparation import run_preparation_pipeline
 
 # Import custom modules: --->
 from .pairwise import run_pairwise_granger
 from .block_exogeneity import run_block_exogeneity
-from .exporter import export_results
 
-PROCESSED_DIR = Path("Datasets/Processed")
-RESULTS_DIR = Path("Results")
+from .exporter import (
+    export_pairwise_yearly,
+    export_block_exogeneity_yearly
+)
+
+# Export file paths: --->
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+PAIRWISE_PATH = os.path.join(
+    BASE_DIR, "Results", "Tables", "pairwise_granger_yearly.csv"
+)
+
+BLOCK_PATH = os.path.join(
+    BASE_DIR, "Results", "Tables", "block_exogeneity_yearly.csv"
+)
 
 
-def load_model_type(frequency: str) -> str:
-    with open(RESULTS_DIR / "Tables" / f"{frequency}_model_selected.txt") as f:
-        return f.read().strip()
+def run_causality(views=None):
+    """
+    Runs full causality pipeline
 
-def run_causality(frequency: str) -> None:
-    model_type = load_model_type(frequency)
+    Includes:
+    - Pairwise Granger causality (rolling window)
+    - Block exogeneity (VAR-based)
+    """
 
-    prices_path = PROCESSED_DIR / f"{frequency}_prices.csv"
-    returns_path = PROCESSED_DIR / f"{frequency}_returns.csv"
+    # Load data: --->
+    if views is None:
+        views = run_preparation_pipeline()
 
-    df_prices = pd.read_csv(prices_path, index_col = 0, parse_dates = True)
-    df_returns = pd.read_csv(returns_path, index_col = 0, parse_dates = True)
+    df = views["combined"].copy()
 
-    ########################################################
-    # Case 1: VAR selected → use returns: --->
-    if "VAR" in model_type:
-        data = df_returns
+    # Variable selection: --->
+    cols = [
+        "log_oil_usd_ret",
+        "log_gold_usd_ret",
+        "log_usd_inr_ret",
+        "inflation_india",
+        "inflation_usa",
+        "log_oil_inr_ret",
+        "log_gold_inr_ret",
+        "log_cpi_india",
+        "log_cpi_usa",
+        "log_oil_usd_real_ret",
+        "log_gold_usd_real_ret",
+        "log_usd_inr_real_ret",
+        "log_oil_inr_real_ret",
+        "log_gold_inr_real_ret"
+    ]
 
-        model = VAR(data).fit(2)
-    ########################################################
+    data = df[cols].copy()
+    data["year"] = df["Date"].astype(int).values
 
-    ########################################################
-    # Case 2: VECM selected → use levels: --->
+    # Clean data: --->
+    data = data.dropna().reset_index(drop=True)
+
+    pairwise_results = []
+    block_results = []
+
+    # Rolling window setup: --->
+    window_size = 20
+    n_obs = len(data)
+
+    if n_obs < window_size:
+        print("Not enough data for rolling causality.")
+        return {
+            "pairwise": [],
+            "block_exogeneity": []
+        }
+
+    # Rolling causality: --->
+    for start in range(0, n_obs - window_size + 1):
+
+        end = start + window_size
+        window = data.iloc[start:end]
+
+        start_year = int(window["year"].iloc[0])
+        end_year = int(window["year"].iloc[-1])
+
+        group = window.drop(columns=["year"])
+
+        # 🚨 HARD FILTER: skip tiny samples
+        if len(group) < 8:
+            continue
+
+        # Pair-wise Granger: --->
+        try:
+            pw_df = run_pairwise_granger(group)
+
+            if isinstance(pw_df, pd.DataFrame) and not pw_df.empty:
+                pw_df["start_year"] = start_year
+                pw_df["end_year"] = end_year
+                pairwise_results.append(pw_df)
+
+        except Exception as e:
+            print(f"Pairwise failed for window {start_year}-{end_year}: {e}")
+
+        # Block exogeneity: --->
+        try:
+            be_df = run_block_exogeneity(group)
+
+            if isinstance(be_df, pd.DataFrame) and not be_df.empty:
+                be_df["start_year"] = start_year
+                be_df["end_year"] = end_year
+                block_results.append(be_df)
+
+        except Exception as e:
+            print(f"Block exogeneity failed for window {start_year}-{end_year}: {e}")
+
+    # Concatenate results: --->
+    if len(pairwise_results) > 0:
+        pairwise_final = pd.concat(pairwise_results, ignore_index=True)
     else:
-        data = df_prices
+        pairwise_final = pd.DataFrame()
 
-        model = VECM(
-            data,
-            k_ar_diff = 2,
-            coint_rank = 1,
-            deterministic = "co",
-        ).fit()
+    if len(block_results) > 0:
+        block_final = pd.concat(block_results, ignore_index=True)
+    else:
+        block_final = pd.DataFrame()
 
-    # Pairwise Granger: --->
-    pairwise_results = run_pairwise_granger(
-        data,
-        max_lag = 2,
-    )
+    # Export results: --->
+    if not pairwise_final.empty:
+        export_pairwise_yearly(pairwise_final, PAIRWISE_PATH)
+    else:
+        print(f"No pairwise results to export.")
 
-    export_results(
-        pairwise_results,
-        RESULTS_DIR / "Tables" / f"{frequency}_pairwise_granger.csv",
-    )
+    if not block_final.empty:
+        export_block_exogeneity_yearly(block_final, BLOCK_PATH)
+    else:
+        print(f"No block exogeneity results to export.")
 
-    # Block Exogeneity: --->
-    block_results = run_block_exogeneity(model)
-
-    export_results(
-        block_results,
-        RESULTS_DIR / "Tables" / f"{frequency}_block_exogeneity.csv",
-    )
+    return {
+        "pairwise": pairwise_final,
+        "block_exogeneity": block_final
+    }

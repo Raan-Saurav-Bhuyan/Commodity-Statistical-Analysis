@@ -8,9 +8,9 @@ DATA_DIR = os.path.join(BASE_DIR, "Datasets", "Processed")
 def load_csv(filename):
     path = os.path.join(DATA_DIR, filename)
     df = pd.read_csv(path)
-    df["Date"] = pd.to_datetime(df["Date"])
-    return df
+    # df["Date"] = pd.to_datetime(df["Date"])
 
+    return df
 
 def load_all_datasets():
     """

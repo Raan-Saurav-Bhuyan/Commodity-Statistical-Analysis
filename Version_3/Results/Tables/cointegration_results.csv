@@ -1,0 +1,4 @@
+system,variables,rank,trace_stat
+nominal,"['log_oil_usd', 'log_oil_inr', 'log_gold_inr']",1,"[38.99576021854304, 10.432562356350033, 1.0648741037203404]"
+real,"['log_oil_usd_real', 'log_gold_usd_real', 'log_oil_inr_real', 'log_cpi_india']",1,"[49.09525385747335, 15.7660783346516, 6.096694628774882, 0.07139634971875702]"
+inflation_augmented,"['log_oil_usd', 'log_oil_inr', 'log_gold_inr']",1,"[31.53299488808186, 11.699596298566531, 1.1236856272554605]"

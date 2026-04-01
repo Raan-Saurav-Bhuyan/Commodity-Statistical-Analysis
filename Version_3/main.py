@@ -24,6 +24,7 @@ from Stationarity import run_stationarity
 from Cointegration import run_cointegration
 from vecm_var import run_vecm_var as run_var
 from Volatility import run_volatility
+from Causality import run_causality
 from Reporting import run_reporting
 
 # Results directory configuration: --->
@@ -48,7 +49,7 @@ def save_results(results, use_timestamp = True):
     with open(filepath, "wb") as f:
         pkl.dump(results, f)
 
-    print(f"💾 Results saved to: {filepath}")
+    print(f"Results saved to: {filepath}")
 
 if __name__ == "__main__":
     """
@@ -67,27 +68,34 @@ if __name__ == "__main__":
         results["preparation"] = run_preparation_pipeline()
         print("Preparation Completed\n")
 
+        print(f"\n\nViews:\n{results['preparation']["combined"].head()}\n")
+
         # Stage 2: Stationarity: --->
         print("[2/6] Running Stationarity Tests...")
-        results["stationarity"] = run_stationarity()
+        results["stationarity"] = run_stationarity(results["preparation"])
         print("Stationarity Completed\n")
 
         # Stage 3: Cointegration: --->
         print("[3/6] Running Cointegration Analysis...")
-        results["cointegration"] = run_cointegration()
+        results["cointegration"] = run_cointegration(results["preparation"], results["stationarity"])
         print("Cointegration Completed\n")
 
         # Stage 4: VECM / VAR: --->
         print("[4/6] Running VAR/VECM Models...")
-        results["var"] = run_var()
+        results["var"] = run_var(results["preparation"], results["cointegration"])
         print("VAR/VECM Completed\n")
 
         # Stage 5: Volatility: --->
         print("[5/6] Running Volatility (DCC-GARCH)...")
-        results["volatility"] = run_volatility()
+        results["volatility"] = run_volatility(results["preparation"])
         print("Volatility Completed\n")
 
-        # Stage 6: Reporting: --->
+        # Stage 6: Causality: --->
+        print("[6/6] Running Causality Analysis...")
+        results["causality"] = run_causality(results["preparation"])
+        print("Causality Completed\n")
+
+       # Stage 7: Reporting: --->
         print("[6/6] Generating Reports...")
         results["reporting"] = run_reporting()
         print("Reporting Completed\n")
@@ -97,7 +105,7 @@ if __name__ == "__main__":
         print("="*60 + "\n")
 
         print("Saving pipeline results...")
-        save_results(results, use_timestamp = False)
+        save_results(results, use_timestamp = True)
 
     except Exception as e:
         print("\n" + "="*60)

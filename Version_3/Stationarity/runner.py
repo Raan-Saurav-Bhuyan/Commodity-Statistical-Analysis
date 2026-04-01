@@ -11,12 +11,14 @@ from .exporter import export_stationarity
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_PATH = os.path.join(BASE_DIR, "Results", "Tables", "stationarity_results.csv")
 
-def run_stationarity():
+def run_stationarity(views = None):
     """
     Main stationarity pipeline
     """
 
-    views = run_preparation_pipeline()
+    # Load data: --->
+    if views is None:
+        views = run_preparation_pipeline()
 
     df = views["combined"]
 
